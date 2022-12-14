@@ -31,6 +31,15 @@
                  <!-- Post content-->
                  <p>{{ post.content }}</p>
 
+                {% if post.tag.exists %}
+                    <i class="fas fa-tags"></i>
+                    {% for tag in post.tag.all %}
+                        <a href="{{ tag.get_absolute_url }}" class="badge badge-light">{{ tag }}</a>
+                    {% endfor %}
+                    <br/>
+                    <br/>
+                {% endif %}
+
                  {% if post.file_upload %}
                     <a href="{{ post.file_upload.url }}" class="btn btn-outline-dark" role="button">
                       Download:
@@ -49,9 +58,9 @@
                     </a>
                  {% endif %}
                  <hr>
-                     </div>
+            </div>
 
-                    <div id="comment-area">
+        <div id="comment-area">
                  <!-- Comments Form -->
                 <div class="card my-4">
                 <h5 class="card-header">Leave a Comment:</h5>
@@ -63,7 +72,7 @@
                 <button type="submit" class="btn btn-primary">Submit</button>
                 </form>
                 </div>
-            </div>
+                </div>
     <!-- Single Comment -->
         <div class="media mb-4">
           <img class="d-flex mr-3 rounded-circle" src="http://placehold.it/50x50" alt="">
@@ -98,6 +107,6 @@
 
           </div>
         </div>
-            </div>
+        </div>
       {% endblock %}
 

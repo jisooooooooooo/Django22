@@ -40,3 +40,15 @@ def category_page(request, slug):
             'category': category,
         }
     )
+
+#def tag_page(request, slug):
+ #  post_list = tag.post_set.all()
+
+  #  return render(
+   #     request,
+    #   {
+      #     'tag': tag,
+        #    'categories': Category.objects.all(),
+         #   'no_category_post_count': Post.objects.filter(category=None).count(),
+        #}
+    #)
