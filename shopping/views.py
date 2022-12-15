@@ -126,10 +126,10 @@ def tag_page(request, slug):
     return render(
         request,
         'shopping/post_list.html',
-    {
+        {
         'post_list': post_list,
         'tag': tag,
         'categories': Category.objects.all(),
         'no_category_post_count': Post.objects.filter(category=None).count(),
-    }
+        }
     )

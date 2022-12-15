@@ -166,7 +166,8 @@ class TestView(TestCase):
         self.assertNotIn(self.post_002.title, main_area.text)
         self.assertNotIn(self.post_003.title, main_area.text)
 
-
+    def test_tag_page(self):
+        response = self.client.get(self.tag_sim.get_absolute_url())
         self.assertEqual(response.status_code, 200)
         soup = BeautifulSoup(response.content, 'html.parser')
 
@@ -175,7 +176,7 @@ class TestView(TestCase):
 
         self.assertIn(self.tag_sim.name, soup.h1.text)
 
-        main_area = soup.find('div', id='main-area')
+        main_area = soup.find('div', id="main-area")
         self.assertIn(self.tag_sim.name, main_area.text)
         self.assertIn(self.post_001.title, main_area.text)
         self.assertNotIn(self.post_002.title, main_area.text)
@@ -230,10 +231,10 @@ class TestView(TestCase):
         self.assertNotEqual(response.status_code, 200)
 
         #로그인은 했지만 작성자가 아닌 경우
-        self.assertNotEqual(self.post_003.author, self.user_trump)
+        self.assertNotEqual(self.post_003.author, self.user_영롱서울)
         self.client.login(
-            username=self.user_trump.username,
-            password='somepassword'
+            username=self.user_영롱서울.username,
+            password='1234'
         )
         response = self.client.get(update_post_url)
         self.assertEqual(response.status_code, 403)
@@ -241,7 +242,7 @@ class TestView(TestCase):
         #작성자가 접근하는 경우
         self.client.login(
             username=self.post_003.author.username,
-            password='somepassword'
+            password='ap943939!'
         )
         response = self.client.get(update_post_url)
         self.assertEqual(response.status_code, 200)
@@ -254,6 +255,7 @@ class TestView(TestCase):
         tag_str_input = main_area.fine('input', id='id_tags_str')
         self.assertTrue(tag_str_input)
         self.assertIn('심플; 세련', tag_str_input.attrs['value'])
+
         response = self.client.post(
             update_post_url,
             {
