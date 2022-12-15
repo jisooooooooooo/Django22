@@ -1,16 +1,17 @@
 from django.test import TestCase, Client
 from bs4 import BeautifulSoup
 from django.contrib.auth.models import User
-from .models import Post, Category, Tag
+from .models import Post, Category, Tag, Comment
+
 
 class TestView(TestCase):
     def setUp(self):
         self.client = Client()
-        self.user_영롱서울 = User.objects.create_user(username='영롱서울', password='ap943939!')
-        self.user_레브드제이 = User.objects.create_user(username='레브드제이', password='1234')
+        self.user_영롱서울 = User.objects.create_user(username='영롱서울', password='somepassword')
+        self.user_레브드제이 = User.objects.create_user(username='레브드제이', password='somepassword')
 
-        self.user_레브드제이.is_staff = True
-        self.user_레브드제이.save()
+        self.user_영롱서울.is_staff = True
+        self.user_영롱서울.save()
 
         self.category_ring = Category.objects.create(name='ring', slug='ring')
         self.category_necklace = Category.objects.create(name='necklace', slug='necklace')
@@ -46,6 +47,11 @@ class TestView(TestCase):
         self.post_003.tag.add(self.tag_sim)
         self.post_003.tag.add(self.tag_daily)
 
+        self.comment_001 = Comment.objects.create(
+            post=self.post_001,
+            author=self.post_001,
+            content='첫 번째 댓글입니다. '
+        )
 
     def navbar_test(self, soup):
         navbar = soup.nav
@@ -75,7 +81,7 @@ class TestView(TestCase):
             f'{self.category_earrings.name} ({self.category_earrings.post_set.count()})', categories_card.text)
 
     def test_post_list(self):
-       # Post가 있는 경우
+        # Post가 있는 경우
         self.assertEqual(Post.objects.count(), 3)
 
         response = self.client.get('/shopping/')
@@ -114,11 +120,10 @@ class TestView(TestCase):
         self.assertIn(self.tag_daily.name, post_003_card.text)
         self.assertNotIn(self.tag_pol.name, post_003_card.text)
 
-
         self.assertIn(self.user_영롱서울.username.upper(), main_area.text)
         self.assertIn(self.user_레브드제이.username.upper(), main_area.text)
 
-        # 포스트가 없는 경우
+    # 포스트가 없는 경우
         Post.objects.all().delete()
         self.assertEqual(Post.objects.count(), 0)
         response = self.client.get('/shopping/')
@@ -149,6 +154,12 @@ class TestView(TestCase):
         self.assertIn(self.tag_sim.name, post_area.text)
         self.assertNotIn(self.tag_daily.name, post_area.text)
         self.assertNotIn(self.tag_pol.name, post_area.text)
+
+        # comment area
+        comment_area = soup.find('div', id='comment-area')
+        comment_001_area = comment_area.fine('div', id='comment-1')
+        self.assertIn(self.comment_001.author.username, comment_001_area.text)
+        self.assertIn(self.comment_001.content, comment_001_area.text)
 
     def test_category_page(self):
         response = self.client.get(self.category_ring.get_absolute_url())
@@ -183,17 +194,17 @@ class TestView(TestCase):
         self.assertNotIn(self.post_003.title, main_area.text)
 
     def test_create_post(self):
-        #로그인하지 않으면 status code가 200이면 안 된다!
+        # 로그인하지 않으면 status code가 200이면 안 된다!
         response = self.client.get('/shopping/create_post/')
         self.assertNotEqual(response.status_code, 200)
 
-        #staff가 아닌 레브드제이가 로그인을 한다.
-        self.client.login(username='레브드제이', password='1234')
+        # staff가 아닌 레브드제이가 로그인을 한다.
+        self.client.login(username='레브드제이', password='somepassword')
         response = self.client.get('/shopping/create_post/')
         self.assertEqual(response.status_code, 200)
 
-        #staff인 레브드제이로 로그인을 한다.
-        self.client.login(username='레브드제이', password='ap943939!')
+        # staff인 영롱서울로 로그인을 한다.
+        self.client.login(username='영롱서울', password='somepassword')
         response = self.client.get('/shopping/create_post/')
         self.assertEqual(response.status_code, 200)
         soup = BeautifulSoup(response.content, 'html.parser')
@@ -210,6 +221,7 @@ class TestView(TestCase):
             {
                 'title': 'Post Form 만들기',
                 'content': "Post Form 페이지를 만듭시다.",
+                'tags_str': '심플; 데일리, 세련'
 
             }
         )
@@ -222,27 +234,28 @@ class TestView(TestCase):
         self.assertTrue(Tag.objects.get(name='심플'))
         self.assertTrue(Tag.objects.get(name='데일리'))
         self.assertTrue(Tag.objects.get(name='세련'))
+        self.assertEqual(Tag.objects.count(), 5)
 
     def test_update_post(self):
         update_post_url = f'/shopping/update_post/{self.post_003.pk}/'
 
-        #로그인하지 않은 경우
+        # 로그인하지 않은 경우
         response = self.client.get(update_post_url)
         self.assertNotEqual(response.status_code, 200)
 
-        #로그인은 했지만 작성자가 아닌 경우
-        self.assertNotEqual(self.post_003.author, self.user_영롱서울)
+        # 로그인은 했지만 작성자가 아닌 경우
+        self.assertNotEqual(self.post_003.author, self.user_레브드제이)
         self.client.login(
-            username=self.user_영롱서울.username,
-            password='1234'
+            username=self.user_레브드제이.username,
+            password='somepassword'
         )
         response = self.client.get(update_post_url)
         self.assertEqual(response.status_code, 403)
 
-        #작성자가 접근하는 경우
+        # 작성자가 접근하는 경우
         self.client.login(
             username=self.post_003.author.username,
-            password='ap943939!'
+            password='somepassword'
         )
         response = self.client.get(update_post_url)
         self.assertEqual(response.status_code, 200)
@@ -274,3 +287,50 @@ class TestView(TestCase):
         self.assertIn('심플', main_area.text)
         self.assertIn('데일리', main_area.text)
         self.assertIn('세련', main_area.text)
+
+    def test_comment_form(self):
+        self.assertEqual(Comment.objects.count(), 1)
+        self.assertEqual(self.post_001.comment_set.count(), 1)
+
+        # 로그인하지 않은 상태
+        response = self.client.get(self.pot_001.get_absolute_url())
+        self.assertEqual(response.status_code, 200)
+        soup = BeautifulSoup(response.content, 'html.parser')
+
+        comment_area = soup.fine('div', id='comment-area')
+        self.assertIn('Log in and leave a comment', comment_area.text)
+        self.assertFalse(comment_area.fine('form', id='comment-form'))
+
+        # 로그인한 상태
+        self.client.login(username='영롱서울', password='somepassword')
+        response = self.client.get(self.post_001.get_absolute_url())
+        self.assertEqual(response.status_code, 200)
+        soup = BeautifulSoup(response.content, 'html.parser')
+
+        comment_area = soup.find('div', id='comment-area')
+        self.assertNotIn('Log in and leave a comment', comment_area.text)
+
+        comment_form = comment_area.fine('form', id='comment-form')
+        self.assertTrue(comment_form.find('textarea', id='id_content'))
+        response = self.client.post(
+            self.post_001.get_absolute_url() + 'new_comment/',
+            {
+                'content': "영롱서울의 댓글입니다.",
+            },
+            follow=True
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        self.assertEqual(Comment.objects.count(), 2)
+        self.assertEqual(self.post_001.comment_set.count(), 2)
+
+        new_comment = Comment.objects.last()
+
+        soup = BeautifulSoup(response.content, 'html.parser')
+        self.assertIn(new_comment.post.title, soup.title.text)
+
+        comment_area = soup.find('div', id='comment-area')
+        new_comment_div = comment_area.find('div', id=f'comment-{new_comment.pk}')
+        self.assertIn('영롱서울', new_comment_div.text)
+        self.assertIn('영롱서울의 댓글입니다.', new_comment_div.text)

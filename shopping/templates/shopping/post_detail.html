@@ -1,4 +1,5 @@
         {% extends 'shopping/base.html' %}
+        {% load crispy_forms_tags %}
         {% block head_title %}
             {{ post.title }} - Shopping
         {% endblock %}
@@ -58,59 +59,45 @@
                         <i class="far fa-file"></i>
                       {% endif %}
                       {{ post.get_file_name }}
-
                     </a>
                  {% endif %}
                  <hr>
             </div>
 
         <div id="comment-area">
-                 <!-- Comments Form -->
-                <div class="card my-4">
+            <!-- Comments Form -->
+            <div class="card my-4">
                 <h5 class="card-header">Leave a Comment:</h5>
                 <div class="card-body">
-                <form>
-                <div class="form-group">
-                <textarea class="form-control" rows="3"></textarea>
+                    {% if user.ist_authenticated %}
+                    <form id="comment-form" method="POST" action="{{ post.get_absolute_url }}new_comment/">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        {{ comment_form | crispy }}
+                    </div>
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                    </form>
+                {% else %}
+                    <a role="button" class="btn btn-outline-dark btn-block btn-sm" href="#" data-toggle="modal" data-target="#loginModal">Log in and leave a comment</a>
+                {% endif %}
                 </div>
-                <button type="submit" class="btn btn-primary">Submit</button>
-                </form>
-                </div>
-                </div>
-    <!-- Single Comment -->
-        <div class="media mb-4">
-          <img class="d-flex mr-3 rounded-circle" src="http://placehold.it/50x50" alt="">
-          <div class="media-body">
-            <h5 class="mt-0">Commenter Name</h5>
-            Cras sit amet nibh libero, in gravida nulla. Nulla vel metus scelerisque ante sollicitudin. Cras purus odio, vestibulum in vulputate at, tempus viverra turpis. Fusce condimentum nunc ac nisi vulputate fringilla. Donec lacinia congue felis in faucibus.
-          </div>
-        </div>
-
-        <!-- Comment with nested comments -->
-        <div class="media mb-4">
-          <img class="d-flex mr-3 rounded-circle" src="http://placehold.it/50x50" alt="">
-          <div class="media-body">
-            <h5 class="mt-0">Commenter Name</h5>
-            Cras sit amet nibh libero, in gravida nulla. Nulla vel metus scelerisque ante sollicitudin. Cras purus odio, vestibulum in vulputate at, tempus viverra turpis. Fusce condimentum nunc ac nisi vulputate fringilla. Donec lacinia congue felis in faucibus.
-
-            <div class="media mt-4">
-              <img class="d-flex mr-3 rounded-circle" src="http://placehold.it/50x50" alt="">
-              <div class="media-body">
-                <h5 class="mt-0">Commenter Name</h5>
-                Cras sit amet nibh libero, in gravida nulla. Nulla vel metus scelerisque ante sollicitudin. Cras purus odio, vestibulum in vulputate at, tempus viverra turpis. Fusce condimentum nunc ac nisi vulputate fringilla. Donec lacinia congue felis in faucibus.
-              </div>
             </div>
 
-            <div class="media mt-4">
-              <img class="d-flex mr-3 rounded-circle" src="http://placehold.it/50x50" alt="">
-              <div class="media-body">
-                <h5 class="mt-0">Commenter Name</h5>
-                Cras sit amet nibh libero, in gravida nulla. Nulla vel metus scelerisque ante sollicitudin. Cras purus odio, vestibulum in vulputate at, tempus viverra turpis. Fusce condimentum nunc ac nisi vulputate fringilla. Donec lacinia congue felis in faucibus.
-              </div>
-            </div>
-
+     {% if post.comment_set.exists %}
+        {% for comment in post.comment_set.iterator %}
+        <!-- Single Comment -->
+        <div class="media mb-4" id="comment-{{ comment.pk }}">
+          <img class="d-flex mr-3 rounded-circle" src="http://placehold.it/50x50" alt="">
+          <div class="media-body">
+            <h5 class="mt-0">{{ comment.author.username }} &nbsp;&nbsp;<small class="text-muted">{{ comment.created_at }}</small>
+            </h5>
+              <p>{{ comment.content | linebreaks }}</p>
           </div>
         </div>
-        </div>
-      {% endblock %}
+        {% endfor %}
+     {% endif %}
+     </div>
+     <hr/>
+
+     {% endblock %}
 
