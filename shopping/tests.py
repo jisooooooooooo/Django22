@@ -201,17 +201,26 @@ class TestView(TestCase):
         main_area = soup.find('div', id='main-area')
         self.assertIn('Create New Post', main_area.text)
 
+        tag_str_input = main_area.fine('input', id='id_tags_str')
+        self.assertTrue(tag_str_input)
+
         self.client.post(
             '/shopping/create_post',
             {
                 'title': 'Post Form 만들기',
                 'content': "Post Form 페이지를 만듭시다.",
+
             }
         )
         self.assertEqual(Post.objects.count(), 4)
         last_post = Post.objects.last()
         self.assertEqual(last_post.title, "Post Form 만들기")
-        self.assertEqual(last_post.author.username, '영롱서울울')
+        self.assertEqual(last_post.author.username, '영롱서울')
+
+        self.assertEqual(last_post.tags.count(), 3)
+        self.assertTrue(Tag.objects.get(name='심플'))
+        self.assertTrue(Tag.objects.get(name='데일리'))
+        self.assertTrue(Tag.objects.get(name='세련'))
 
     def test_update_post(self):
         update_post_url = f'/shopping/update_post/{self.post_003.pk}/'
@@ -242,12 +251,16 @@ class TestView(TestCase):
         main_area = soup.find('div', id='main-area')
         self.assertIn('Edit Post', main_area.text)
 
-        respose = self.client.post(
+        tag_str_input = main_area.fine('input', id='id_tags_str')
+        self.assertTrue(tag_str_input)
+        self.assertIn('심플; 세련', tag_str_input.attrs['value'])
+        response = self.client.post(
             update_post_url,
             {
                 'title': '세 번째 포스트를 수정했습니다. ',
                 'content': '안녕 세계?',
-                'category': self.category_ring.pk
+                'category': self.category_ring.pk,
+                'tags_str': '심플; 데일리, 세련'
             },
             follow=True
         )
@@ -256,3 +269,6 @@ class TestView(TestCase):
         self.assertIn('세 번째 포스트를 수정했습니다.', main_area.text)
         self.assertIn('안녕 세계?', main_area.text)
         self.assertIn(self.category_ring.name, main_area.text)
+        self.assertIn('심플', main_area.text)
+        self.assertIn('데일리', main_area.text)
+        self.assertIn('세련', main_area.text)
