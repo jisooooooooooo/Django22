@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="ko">
+<head>
+    <title>{% block head_title %}Shopping{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'shopping/bootstrap/bootstrap.min.css' %}" media="screen">
+    <script src="https://kit.fontawesome.com/6209382777.js" crossorigin="anonymous"></script>
+</head>
+<body>
+
+{% include 'shopping/navbar.html' %}
+
+
+    <div class="container my-3">
+      <div class="row">
+        <div class="col-12" id="main-area">
+            {% block main_area %}
+            {% endblock %}
+       </div>
+
+        <div class="col-md-4 col-lg-3">
+          <!-- Search widget-->
+          <div class="card mb-4">
+            <div class="card-header">Search</div>
+            <div class="card-body">
+              <div class="input-group">
+                <input type="text" class="form-control" placeholder="Search for...">
+                <span class="input-group-btn">
+                    <button class="btn btn-primary" type="button">Go!</button>
+                </span>
+              </div>
+            </div>
+          </div>
+          <!-- Categories widget-->
+          <div class="card mb-4"  id="categories-card">
+            <div class="card-header">Categories</div>
+            <div class="card-body">
+              <div class="row">
+                  <ul>
+                      {% for category in categories %}
+                      <li>
+                          <a href="{{ category.get_absolute_url }}">{{ category }} ({{ category.post_set.count }})</a>
+                      </li>
+                      {% endfor %}
+                      <li>
+                          <a href="/shopping/category/no_category/">미분류 ({{ no_category_post_count }})</a>
+                      </li>
+                  </ul>
+
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+   {% include 'shopping/footer.html' %}
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js" integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.min.js" integrity="sha384-w1Q4orYjBQndcko6MimVbzY0tgp4pWB4lZ7lr30WKz0vr/aWKhXdBNmNb5D92v7s" crossorigin="anonymous"></script>
+
+</body>
+</html>
